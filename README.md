@@ -991,3 +991,129 @@ releases:
     chart: helloworld-repo/helloworld
     installed: true 
 ```
+
+## Using Helm Repo
+
+We can add helm repository and use charts from that repository.
+
+### Search Repository
+
+Search repository for wordpress from Artifact Hub: https://artifacthub.io/. Enter search keyword and open the chart page. 
+
+In the chart page, click Install button to view installation instruction. 
+
+Example:
+
+```bash
+# Add repository
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# Install chart
+helm install my-wordpress bitnami/wordpress --version 24.1.6
+```
+
+### Add Repository
+
+Add new repository to helm and install chart.
+
+```bash
+# Add repository
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# Install chart
+helm install my-wordpress bitnami/wordpress --version 24.1.6
+```
+
+## Helm Hook
+
+We can use helm hook to perform some task on helm install/upgrade/rollback processes. Available hook can be found on the hook documentation: https://helm.sh/docs/topics/charts_hooks/#the-available-hooks
+
+| Annotation Value | Description |
+| -----------------|-------------|
+|pre-install	     | Executes after templates are rendered, but before any resources are created in Kubernetes|
+|post-install      | Executes after all resources are loaded into Kubernetes|
+|pre-delete        | Executes on a deletion request before any resources are deleted from Kubernetes|
+|post-delete       | Executes on a deletion request after all of the release's resources have been deleted|
+|pre-upgrade       | Executes on an upgrade request after templates are rendered, but before any resources are updated
+|post-upgrade      | Executes on an upgrade request after all resources have been upgraded|
+|pre-rollback      | Executes on a rollback request after templates are rendered, but before any resources are rolled back
+|post-rollback     | Executes on a rollback request after all resources have been modified|
+|test              | Executes when the Helm test subcommand is invoked ( view test docs)|
+
+Example `helloworld/templates/hooks/post-install-job.yaml`:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}"
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: post-install-job
+        image: "alpine:3.3"
+        command: ["/bin/sleep","{{ default "10" .Values.sleepyTime }}"]
+```
+
+It is possible to define a weight for a hook which will help build a deterministic executing order. Weights are defined using the following annotation:
+
+```yaml
+annotations:
+  "helm.sh/hook-weight": "5"
+```
+Hook weights can be positive or negative numbers but must be represented as strings. When Helm starts the execution cycle of hooks of a particular Kind it will sort those hooks in ascending order.
+
+## Helm Test
+
+We can use helm test to do testing on our installed helm chart. Documentation: https://helm.sh/docs/topics/chart_tests/ 
+
+Example `helloworld/templates/tests/test-connection.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "helloworld.fullname" . }}-test-connection"
+  labels:
+    {{- include "helloworld.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "helloworld.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
+```
+
+Install helm chart:
+
+```bash
+helm install helloworld-dev helloworld
+```
+
+Run helm test to a helm release:
+
+```bash
+helm test helloworld-dev
+```
