@@ -1,0 +1,7 @@
+repositories:
+  - name: helloworld-repo
+    url: https://github.com/rahulwagh/helmchart@helloworld?ref=master&sparse=0
+releases:
+  - name: helloworld
+    chart: helloworld-repo/helloworld
+    installed: false 
