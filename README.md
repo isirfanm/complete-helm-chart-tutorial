@@ -773,7 +773,9 @@ Call to API works successfuly as expected.
 
 ## Helmfile
 
-Helmfile is a declarative spec for deploying helm charts. It lets you...
+Github: https://github.com/helmfile/helmfile 
+
+Helmfile is a declarative spec for deploying helm charts. With Helmfile you can:
 
 - Keep a directory of chart value files and maintain changes in version control.
 - Apply CI/CD to configuration changes.
