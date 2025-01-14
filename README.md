@@ -970,6 +970,14 @@ service/kubernetes   ClusterIP   10.152.183.1   <none>        443/TCP   7h21m
 
 We can use github repository to add charts.
 
+Add helm-git plugin:
+
+```bash
+helm plugin install https://github.com/aslafy-z/helm-git --version 1.3.0
+```
+
+Add repositories configuration to `helmfile.yaml` file.
+
 Example `helmfile.yaml`:
 
 ```yaml
