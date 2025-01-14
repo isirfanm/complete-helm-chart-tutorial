@@ -975,9 +975,9 @@ Example `helmfile.yaml`:
 ```yaml
 repositories:
   - name: helloworld-repo
-    url: git+https://github.com/rahulwagh/helmchart@helloworld?ref=master&sparse=0
+    url: git+https://github.com/isirfanm/complete-helm-chart-tutorial@helloworld
 releases:
   - name: helloworld
     chart: helloworld-repo/helloworld
-    installed: false 
+    installed: true 
 ```
